@@ -209,6 +209,28 @@ namespace Win11HotspotManager.Services
                     }
 
                     // --- 2. Gerçek rotalar (normalize path ile) ---
+                    // QR bilet linki: GET /login?username=..&password=.. -> otomatik giriş denemesi
+                    if (path.StartsWith("/login", StringComparison.OrdinalIgnoreCase) && method == "GET")
+                    {
+                        var query = ParseQueryParams(ExtractQuery(rawTarget));
+                        query.TryGetValue("username", out string? qu);
+                        query.TryGetValue("password", out string? qp);
+                        if (!string.IsNullOrEmpty(qu) && !string.IsNullOrEmpty(qp))
+                        {
+                            var qrAuth = _userManager.Authenticate(qu, qp, clientIp, clientMac);
+                            LoginAttempted?.Invoke(qu, clientIp, qrAuth.Success);
+                            string qrHtml = GenerateLoginPageHtml(clientIp, clientMac, qrAuth.Success, qrAuth.Message, qu);
+                            await SendResponseAsync(stream, 200, "text/html; charset=utf-8", qrHtml);
+                            return;
+                        }
+                        if (!string.IsNullOrEmpty(qu))
+                        {
+                            string prefillHtml = GenerateLoginPageHtml(clientIp, clientMac, isAuthorized, null, qu);
+                            await SendResponseAsync(stream, 200, "text/html; charset=utf-8", prefillHtml);
+                            return;
+                        }
+                    }
+
                     if (path.StartsWith("/api/login", StringComparison.OrdinalIgnoreCase) && method == "POST")
                     {
                         await HandleApiLoginAsync(stream, body, clientIp, clientMac);
@@ -289,6 +311,34 @@ namespace Win11HotspotManager.Services
             if (h != -1) path = path.Substring(0, h);
             if (string.IsNullOrEmpty(path)) return "/";
             return path;
+        }
+
+        private static string ExtractQuery(string rawTarget)
+        {
+            if (string.IsNullOrEmpty(rawTarget)) return string.Empty;
+            int q = rawTarget.IndexOf('?');
+            if (q == -1) return string.Empty;
+            string query = rawTarget.Substring(q + 1);
+            int h = query.IndexOf('#');
+            if (h != -1) query = query.Substring(0, h);
+            return query;
+        }
+
+        private static Dictionary<string, string> ParseQueryParams(string query)
+        {
+            var dict = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            if (string.IsNullOrEmpty(query)) return dict;
+            foreach (var pair in query.Split('&'))
+            {
+                var kv = pair.Split(new[] { '=' }, 2);
+                if (kv.Length == 2)
+                {
+                    string key = WebUtility.UrlDecode(kv[0].Trim());
+                    if (!string.IsNullOrEmpty(key) && !dict.ContainsKey(key))
+                        dict[key] = WebUtility.UrlDecode(kv[1].Trim());
+                }
+            }
+            return dict;
         }
 
         private bool IsCaptivePortalProbe(string path, string rawTarget)

@@ -7,19 +7,21 @@
         Background="#18181B" Foreground="#F4F4F5" FontFamily="Segoe UI">
     <ScrollViewer VerticalScrollBarVisibility="Auto">
         <StackPanel Margin="22">
-            <TextBlock Text="📷 Wi-Fi Katılım Kodu" FontSize="16" FontWeight="SemiBold" Foreground="#FFFFFF" HorizontalAlignment="Center"/>
-            <TextBlock Text="Telefon kamerasıyla okutun, ağa otomatik katılın." FontSize="12" Foreground="#A1A1AA" HorizontalAlignment="Center" Margin="0,4,0,12" TextWrapping="Wrap" TextAlignment="Center"/>
+            <TextBlock x:Name="TxtMainTitle" Text="📷 Wi-Fi Katılım Kodu" FontSize="16" FontWeight="SemiBold" Foreground="#FFFFFF" HorizontalAlignment="Center"/>
+            <TextBlock x:Name="TxtMainDesc" Text="Telefon kamerasıyla okutun, ağa otomatik katılın." FontSize="12" Foreground="#A1A1AA" HorizontalAlignment="Center" Margin="0,4,0,12" TextWrapping="Wrap" TextAlignment="Center"/>
             <Border Background="#FFFFFF" CornerRadius="12" Padding="12" HorizontalAlignment="Center">
                 <Image x:Name="ImgWifiQr" Width="220" Height="220"/>
             </Border>
             <TextBlock x:Name="TxtWifiInfo" FontSize="12" Foreground="#D4D4D8" HorizontalAlignment="Center" Margin="0,10,0,24" TextAlignment="Center"/>
 
-            <TextBlock Text="🌐 Giriş Sayfası Kodu" FontSize="16" FontWeight="SemiBold" Foreground="#FFFFFF" HorizontalAlignment="Center"/>
-            <TextBlock Text="Wi-Fi'a katıldıktan sonra giriş ekranı açılmazsa bunu okutun." FontSize="12" Foreground="#A1A1AA" HorizontalAlignment="Center" Margin="0,4,0,12" TextWrapping="Wrap" TextAlignment="Center"/>
-            <Border Background="#FFFFFF" CornerRadius="12" Padding="12" HorizontalAlignment="Center">
-                <Image x:Name="ImgPortalQr" Width="180" Height="180"/>
-            </Border>
-            <TextBlock x:Name="TxtPortalInfo" FontSize="12" Foreground="#D4D4D8" HorizontalAlignment="Center" Margin="0,10,0,20" TextAlignment="Center"/>
+            <StackPanel x:Name="PanelPortalQr">
+                <TextBlock Text="🌐 Giriş Sayfası Kodu" FontSize="16" FontWeight="SemiBold" Foreground="#FFFFFF" HorizontalAlignment="Center"/>
+                <TextBlock Text="Wi-Fi'a katıldıktan sonra giriş ekranı açılmazsa bunu okutun." FontSize="12" Foreground="#A1A1AA" HorizontalAlignment="Center" Margin="0,4,0,12" TextWrapping="Wrap" TextAlignment="Center"/>
+                <Border Background="#FFFFFF" CornerRadius="12" Padding="12" HorizontalAlignment="Center">
+                    <Image x:Name="ImgPortalQr" Width="180" Height="180"/>
+                </Border>
+                <TextBlock x:Name="TxtPortalInfo" FontSize="12" Foreground="#D4D4D8" HorizontalAlignment="Center" Margin="0,10,0,20" TextAlignment="Center"/>
+            </StackPanel>
 
             <Button Content="Kapat" Width="120" Height="36" HorizontalAlignment="Center"
                     Background="#2563EB" Foreground="#FFFFFF" BorderThickness="0" FontWeight="SemiBold" Cursor="Hand"

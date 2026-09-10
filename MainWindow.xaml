@@ -577,10 +577,20 @@
                                     <DataGridTextColumn Header="Veri" Binding="{Binding DataDisplay}" Width="1.2*"/>
 
                                     <!-- Actions -->
-                                    <DataGridTemplateColumn Header="İşlemler" Width="118">
+                                    <DataGridTemplateColumn Header="İşlemler" Width="156">
                                         <DataGridTemplateColumn.CellTemplate>
                                             <DataTemplate>
                                                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                                    <Button Content="🔳" Padding="6,3" FontSize="11" 
+                                                            Background="#1D4ED8" Foreground="#FFFFFF" BorderThickness="0"
+                                                            Margin="0,0,6,0" Cursor="Hand" Click="BtnUserQr_Click"
+                                                            ToolTip="Kişisel giriş QR kodu">
+                                                        <Button.Resources>
+                                                            <Style TargetType="Border">
+                                                                <Setter Property="CornerRadius" Value="4"/>
+                                                            </Style>
+                                                        </Button.Resources>
+                                                    </Button>
                                                     <Button Content="📋" Padding="6,3" FontSize="11" 
                                                             Background="#334155" Foreground="#F8FAFC" BorderThickness="0"
                                                             Margin="0,0,6,0" Cursor="Hand" Click="BtnCopyUser_Click"

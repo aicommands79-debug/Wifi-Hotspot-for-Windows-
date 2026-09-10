@@ -597,6 +597,21 @@ namespace Win11HotspotManager
             }
         }
 
+        private void BtnUserQr_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is Button btn && btn.DataContext is PortalUser user)
+            {
+                var wnd = new QrCodeWindow
+                {
+                    Owner = this,
+                    TicketUsername = user.Username,
+                    TicketPassword = user.Password,
+                    PortalUrl = "http://192.168.137.1:8080"
+                };
+                wnd.ShowDialog();
+            }
+        }
+
         private void BtnCopyUser_Click(object sender, RoutedEventArgs e)
         {
             if (sender is Button btn && btn.DataContext is PortalUser user)
