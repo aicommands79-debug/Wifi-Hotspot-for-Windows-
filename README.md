@@ -46,11 +46,6 @@ Windows 11 üzerinde bilgisayarınızın internetini paylaşmanızı ve kullanı
 
 Proje dizinindeki [`Başlat.bat`](file:///C:/Users/Ege/.gemini/antigravity/scratch/Win11HotspotManager/Başlat.bat) dosyasına çift tıklayarak uygulamayı anında açabilirsiniz.
 
-Veya konsoldan:
-```powershell
-cd C:\Users\Ege\.gemini\antigravity\scratch\Win11HotspotManager
-dotnet run
-```
 
 ---
 
