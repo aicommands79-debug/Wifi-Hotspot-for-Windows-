@@ -1,0 +1,894 @@
+<Window x:Class="Win11HotspotManager.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:Win11HotspotManager"
+        mc:Ignorable="d"
+        Title="Windows 11 Wi-Fi Hotspot &amp; Web Giriş Portalı" 
+        Height="720" Width="880"
+        MinHeight="640" MinWidth="780"
+        WindowStartupLocation="CenterScreen"
+        Background="#18181B"
+        Foreground="#F4F4F5"
+        FontFamily="Segoe UI Variable Display, Segoe UI, Arial">
+
+    <Window.Resources>
+        <!-- Modern Card Style -->
+        <Style x:Key="ModernCard" TargetType="Border">
+            <Setter Property="Background" Value="#242427"/>
+            <Setter Property="BorderBrush" Value="#333338"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="12"/>
+            <Setter Property="Padding" Value="18"/>
+            <Setter Property="Margin" Value="0,0,0,14"/>
+        </Style>
+
+        <!-- Modern TextBox Style -->
+        <Style x:Key="ModernTextBox" TargetType="TextBox">
+            <Setter Property="Background" Value="#1E1E22"/>
+            <Setter Property="Foreground" Value="#F4F4F5"/>
+            <Setter Property="BorderBrush" Value="#3F3F46"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="10,8"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="TextBox">
+                        <Border x:Name="border" Background="{TemplateBinding Background}" 
+                                BorderBrush="{TemplateBinding BorderBrush}" 
+                                BorderThickness="{TemplateBinding BorderThickness}" 
+                                CornerRadius="8">
+                            <ScrollViewer x:Name="PART_ContentHost" Focusable="false" HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Hidden"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsFocused" Value="true">
+                                <Setter TargetName="border" Property="BorderBrush" Value="#3B82F6"/>
+                                <Setter TargetName="border" Property="BorderThickness" Value="1.5"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Modern PasswordBox Style -->
+        <Style x:Key="ModernPasswordBox" TargetType="PasswordBox">
+            <Setter Property="Background" Value="#1E1E22"/>
+            <Setter Property="Foreground" Value="#F4F4F5"/>
+            <Setter Property="BorderBrush" Value="#3F3F46"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="10,8"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="PasswordBox">
+                        <Border x:Name="border" Background="{TemplateBinding Background}" 
+                                BorderBrush="{TemplateBinding BorderBrush}" 
+                                BorderThickness="{TemplateBinding BorderThickness}" 
+                                CornerRadius="8">
+                            <ScrollViewer x:Name="PART_ContentHost" Focusable="false" HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Hidden"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsFocused" Value="true">
+                                <Setter TargetName="border" Property="BorderBrush" Value="#3B82F6"/>
+                                <Setter TargetName="border" Property="BorderThickness" Value="1.5"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Modern Button Style -->
+        <Style x:Key="ModernButton" TargetType="Button">
+            <Setter Property="Background" Value="#2563EB"/>
+            <Setter Property="Foreground" Value="#FFFFFF"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="14,8"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="btnBorder" Background="{TemplateBinding Background}" 
+                                BorderBrush="{TemplateBinding BorderBrush}" 
+                                BorderThickness="{TemplateBinding BorderThickness}" 
+                                CornerRadius="8">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" Margin="{TemplateBinding Padding}"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="btnBorder" Property="Opacity" Value="0.9"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="btnBorder" Property="Background" Value="#3F3F46"/>
+                                <Setter Property="Foreground" Value="#71717A"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Modern Tab Style -->
+        <Style x:Key="ModernTabControl" TargetType="TabControl">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="0"/>
+        </Style>
+
+        <Style x:Key="ModernTabItem" TargetType="TabItem">
+            <Setter Property="Foreground" Value="#A1A1AA"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Padding" Value="16,10"/>
+            <Setter Property="Margin" Value="0,0,6,0"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="TabItem">
+                        <Border x:Name="tabBorder" Background="#242427" BorderBrush="#333338" BorderThickness="1" CornerRadius="8" Padding="{TemplateBinding Padding}" Margin="{TemplateBinding Margin}">
+                            <ContentPresenter ContentSource="Header" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter TargetName="tabBorder" Property="Background" Value="#3B82F6"/>
+                                <Setter Property="Foreground" Value="#FFFFFF"/>
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="tabBorder" Property="BorderBrush" Value="#60A5FA"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
+
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/> <!-- Header -->
+            <RowDefinition Height="*"/>    <!-- Tab Content -->
+            <RowDefinition Height="Auto"/> <!-- Status Bar -->
+        </Grid.RowDefinitions>
+
+        <!-- 1. HEADER SECTION -->
+        <Grid Grid.Row="0" Margin="0,0,0,16">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- App Title -->
+            <StackPanel Grid.Column="0">
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <TextBlock Text="📶" FontSize="26" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                    <TextBlock Text="Windows 11 Wi-Fi &amp; Web Portalı" FontSize="20" FontWeight="SemiBold" Foreground="#FFFFFF" VerticalAlignment="Center"/>
+                </StackPanel>
+                <TextBlock Text="Mobil Hotspot yayını ve kişiye özel web arayüzü ile kimlik doğrulama." 
+                           FontSize="12.5" Foreground="#A1A1AA" Margin="36,2,0,0"/>
+            </StackPanel>
+
+            <!-- Badges -->
+            <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                <Border Background="#27272A" CornerRadius="8" Padding="10,6" Margin="0,0,10,0" BorderBrush="#3F3F46" BorderThickness="1">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="🌐 Kaynak: " FontSize="12" Foreground="#A1A1AA"/>
+                        <TextBlock x:Name="TxtInternetSource" Text="Secret Wifi2" FontSize="12" FontWeight="SemiBold" Foreground="#60A5FA"/>
+                    </StackPanel>
+                </Border>
+
+                <Border x:Name="BadgeStatus" Background="#27272A" CornerRadius="8" Padding="12,6" BorderBrush="#3F3F46" BorderThickness="1">
+                    <StackPanel Orientation="Horizontal">
+                        <Ellipse x:Name="StatusDot" Width="8" Height="8" Fill="#9CA3AF" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                        <TextBlock x:Name="TxtStatus" Text="Kapalı" FontSize="12" FontWeight="SemiBold" Foreground="#D1D5DB"/>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </Grid>
+
+        <!-- 2. TAB CONTROL -->
+        <TabControl x:Name="MainTabs" Grid.Row="1" Style="{StaticResource ModernTabControl}">
+            
+            <!-- TAB 1: HOTSPOT YAYINI -->
+            <TabItem Header="📶 Hotspot Yayını" Style="{StaticResource ModernTabItem}">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" Margin="0,14,0,0">
+                    <StackPanel>
+                        <!-- MOD SEÇİM KARTI -->
+                        <Border Style="{StaticResource ModernCard}">
+                            <StackPanel>
+                                <Grid Margin="0,0,0,12">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="Bağlantı ve Kimlik Doğrulama Yöntemi" FontSize="14.5" FontWeight="SemiBold" Foreground="#FFFFFF" VerticalAlignment="Center"/>
+                                    <TextBlock Grid.Column="1" Text="Lütfen kullanmak istediğiniz yöntemi seçin" FontSize="11.5" Foreground="#94A3B8" VerticalAlignment="Center"/>
+                                </Grid>
+
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="16"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+
+                                    <!-- Option 1: Web Portal Mode -->
+                                    <Border x:Name="CardPortalMode" Grid.Column="0" Background="#1E293B" BorderBrush="#3B82F6" BorderThickness="2" 
+                                            CornerRadius="10" Padding="14" Cursor="Hand" MouseLeftButtonDown="CardPortalMode_Click">
+                                        <StackPanel>
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                </Grid.ColumnDefinitions>
+                                                <RadioButton x:Name="RbPortalMode" IsChecked="True" GroupName="AuthMode" 
+                                                             Checked="AuthMode_Changed"
+                                                             Foreground="#FFFFFF" FontSize="13.5" FontWeight="Bold" Content="🌐 Web Giriş Portalı"/>
+                                                <Border x:Name="BadgePortalActive" Grid.Column="1" Background="#2563EB" CornerRadius="6" Padding="6,2">
+                                                    <TextBlock Text="✔ AKTİF SEÇİM" FontSize="10" FontWeight="Bold" Foreground="#FFFFFF"/>
+                                                </Border>
+                                            </Grid>
+                                            <TextBlock Text="Önce ortak Wi-Fi şifresiyle ağa katılınır (Windows şifresiz yayına izin vermez, telefon bir kez hatırlar). Sonra giriş ekranı otomatik açılır; herkes kendi biletini girer, hesap başına 1 cihaz." 
+                                                       FontSize="11.5" Foreground="#94A3B8" TextWrapping="Wrap" Margin="22,6,0,0" LineHeight="16"/>
+                                        </StackPanel>
+                                    </Border>
+
+                                    <!-- Option 2: Standard WPA2 Mode -->
+                                    <Border x:Name="CardStandardMode" Grid.Column="2" Background="#1E1E22" BorderBrush="#3F3F46" BorderThickness="1" 
+                                            CornerRadius="10" Padding="14" Cursor="Hand" MouseLeftButtonDown="CardStandardMode_Click">
+                                        <StackPanel>
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                </Grid.ColumnDefinitions>
+                                                <RadioButton x:Name="RbStandardMode" GroupName="AuthMode" 
+                                                             Checked="AuthMode_Changed"
+                                                             Foreground="#D4D4D8" FontSize="13.5" FontWeight="Bold" Content="🔑 Klasik Wi-Fi Şifresi"/>
+                                                <Border x:Name="BadgeStandardActive" Grid.Column="1" Background="#059669" CornerRadius="6" Padding="6,2" Visibility="Collapsed">
+                                                    <TextBlock Text="✔ AKTİF SEÇİM" FontSize="10" FontWeight="Bold" Foreground="#FFFFFF"/>
+                                                </Border>
+                                            </Grid>
+                                            <TextBlock Text="Klasik şifreli bağlantı. Tüm cihazlar ortak tek bir Wi-Fi şifresi girerek doğrudan bağlanır, web arayüzü gösterilmez." 
+                                                       FontSize="11.5" Foreground="#94A3B8" TextWrapping="Wrap" Margin="22,6,0,0" LineHeight="16"/>
+                                        </StackPanel>
+                                    </Border>
+                                </Grid>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- AĞ AYARLARI KARTI -->
+                        <Border Style="{StaticResource ModernCard}">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
+
+                                <Grid Grid.Row="0">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="16"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="16"/>
+                                        <ColumnDefinition Width="200"/>
+                                    </Grid.ColumnDefinitions>
+
+                                    <!-- Wi-Fi SSID Field -->
+                                    <StackPanel Grid.Column="0">
+                                        <TextBlock Text="Wi-Fi Ağı Adı (SSID)" FontSize="13" FontWeight="Medium" Foreground="#D4D4D8" Margin="0,0,0,8"/>
+                                        <TextBox x:Name="TxtSsid" Style="{StaticResource ModernTextBox}" Text="Windows11_Hotspot" Height="38"/>
+                                        <TextBlock Text="Cihazlarda görünecek yayın adı." FontSize="11" Foreground="#71717A" Margin="2,4,0,0"/>
+                                    </StackPanel>
+
+                                    <!-- Wi-Fi Base Password Field -->
+                                    <StackPanel Grid.Column="2">
+                                        <TextBlock x:Name="LblPassword" Text="Temel Wi-Fi Parolası" FontSize="13" FontWeight="Medium" Foreground="#D4D4D8" Margin="0,0,0,8"/>
+                                        <Grid Height="38">
+                                            <PasswordBox x:Name="PbPassword" Style="{StaticResource ModernPasswordBox}" Password="SecretPassword123"/>
+                                            <TextBox x:Name="TxtPasswordVisible" Style="{StaticResource ModernTextBox}" Visibility="Collapsed"/>
+                                            <Button x:Name="BtnTogglePassword" Content="👁️" Width="34" Height="34" 
+                                                    HorizontalAlignment="Right" Margin="0,0,2,0"
+                                                    Background="Transparent" BorderThickness="0" Foreground="#A1A1AA"
+                                                    Cursor="Hand" Click="BtnTogglePassword_Click" ToolTip="Şifreyi Göster / Gizle"/>
+                                        </Grid>
+                                        <TextBlock x:Name="LblPasswordHelp" Text="Fiziksel bağlantı için kullanılır." FontSize="11" Foreground="#71717A" Margin="2,4,0,0"/>
+                                    </StackPanel>
+
+                                    <!-- Start / Stop Button -->
+                                    <StackPanel Grid.Column="4" VerticalAlignment="Bottom" Margin="0,0,0,18">
+                                        <Button x:Name="BtnToggleHotspot" Style="{StaticResource ModernButton}" 
+                                                Content="Hotspot'ı Başlat" Height="40" FontSize="14"
+                                                Click="BtnToggleHotspot_Click"/>
+                                    </StackPanel>
+                                </Grid>
+
+                                <!-- Portal Info Box (Shown in Portal Mode) -->
+                                <Border x:Name="BoxPortalInfo" Grid.Row="1" Background="#1E293B" BorderBrush="#3B82F6" BorderThickness="1" 
+                                        CornerRadius="8" Padding="14" Margin="0,14,0,0">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <StackPanel Grid.Column="0">
+                                            <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
+                                                <TextBlock Text="🌐 Web Giriş Portalı:" FontWeight="SemiBold" Foreground="#60A5FA" FontSize="13"/>
+                                                <TextBlock Text=" http://192.168.137.1:8080" FontWeight="Bold" Foreground="#FFFFFF" FontSize="13"/>
+                                            </StackPanel>
+                                            <TextBlock Text="Ortak Wi-Fi şifresiyle ağa katılan cihazda giriş ekranı otomatik açılır. Şifreyi giren değil, biletini giren internete çıkar. Biletler 'Kullanıcılar' sekmesinden yönetilir." 
+                                                       FontSize="11.5" Foreground="#94A3B8" LineHeight="16"/>
+                                        </StackPanel>
+                                        <Button Grid.Column="1" Content="🔗 Portalı Tarayıcıda Test Et" 
+                                                Background="#334155" Foreground="#F8FAFC" BorderThickness="0"
+                                                Padding="12,6" FontSize="11.5" FontWeight="SemiBold" Cursor="Hand"
+                                                Click="BtnTestPortal_Click">
+                                            <Button.Resources>
+                                                <Style TargetType="Border">
+                                                    <Setter Property="CornerRadius" Value="6"/>
+                                                </Style>
+                                            </Button.Resources>
+                                        </Button>
+                                    </Grid>
+                                </Border>
+
+                                <!-- Alert Message -->
+                                <Border x:Name="BorderAlert" Grid.Row="2" Background="#261E14" BorderBrush="#78350F" BorderThickness="1" 
+                                        CornerRadius="8" Padding="12,8" Margin="0,14,0,0" Visibility="Collapsed">
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock x:Name="TxtAlertIcon" Text="⚠️" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                        <TextBlock x:Name="TxtAlertMessage" Text="Hata mesajı..." FontSize="12" Foreground="#FDE68A" VerticalAlignment="Center" TextWrapping="Wrap"/>
+                                    </StackPanel>
+                                </Border>
+                            </Grid>
+                        </Border>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+
+            <!-- TAB 2: KULLANICILAR VE BİLETLER -->
+            <TabItem x:Name="TabUsers" Header="👥 Kullanıcılar &amp; Biletler" Style="{StaticResource ModernTabItem}">
+                <Grid Margin="0,14,0,0">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/> <!-- Mode Warning -->
+                        <RowDefinition Height="Auto"/> <!-- Action Bar (Add / Random) -->
+                        <RowDefinition Height="*"/>    <!-- Users Grid -->
+                    </Grid.RowDefinitions>
+
+                    <!-- Standard Mode Warning (only visible in plain-password mode) -->
+                    <Border x:Name="BoxStandardModeWarning" Grid.Row="0" Background="#261E14" BorderBrush="#78350F" BorderThickness="1"
+                            CornerRadius="8" Padding="12,8" Margin="0,0,0,14" Visibility="Collapsed">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="🔑" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                            <TextBlock Text="Şu anda 'Klasik Wi-Fi Şifresi' modundasınız. Cihazlar düz Wi-Fi şifresiyle doğrudan bağlanır, bu listedeki kullanıcı adı/şifreler ve web arayüzü kullanılmaz. Web girişi için 'Hotspot Yayını' sekmesinden modu değiştirin."
+                                       FontSize="12" Foreground="#FDE68A" VerticalAlignment="Center" TextWrapping="Wrap"/>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Action Bar -->
+                    <Border x:Name="BoxUserActions" Grid.Row="1" Style="{StaticResource ModernCard}" Padding="14">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="14"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="10"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="10"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+
+                            <!-- Quick Random Generate Button -->
+                            <Button Grid.Column="0" Content="🎲 Rastgele Bilet / Kullanıcı Üret" 
+                                    Background="#059669" Foreground="#FFFFFF" BorderThickness="0"
+                                    Padding="14,9" FontSize="12.5" FontWeight="SemiBold" Cursor="Hand"
+                                    Click="BtnGenerateRandomUser_Click">
+                                <Button.Resources>
+                                    <Style TargetType="Border">
+                                        <Setter Property="CornerRadius" Value="8"/>
+                                    </Style>
+                                </Button.Resources>
+                            </Button>
+
+                            <!-- Manuel Add: Username -->
+                            <TextBox Grid.Column="2" x:Name="TxtNewUsername" Style="{StaticResource ModernTextBox}" 
+                                     Text="yeni_kullanici" Height="36" FontSize="12.5" ToolTip="Kullanıcı Adı"/>
+
+                            <!-- Manuel Add: Password -->
+                            <TextBox Grid.Column="4" x:Name="TxtNewPassword" Style="{StaticResource ModernTextBox}" 
+                                     Text="Sifre123" Height="36" FontSize="12.5" ToolTip="Kullanıcı Şifresi"/>
+
+                            <!-- Add Button -->
+                            <Button Grid.Column="6" Content="➕ Kullanıcı Ekle" 
+                                    Style="{StaticResource ModernButton}" Height="36" FontSize="12"
+                                    Click="BtnAddUser_Click"/>
+                        </Grid>
+                    </Border>
+
+                    <!-- Users Table -->
+                    <Border Grid.Row="2" Style="{StaticResource ModernCard}" Padding="14">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                            </Grid.RowDefinitions>
+
+                            <Grid Grid.Row="0" Margin="0,0,0,10">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                    <TextBlock Text="Kayıtlı Kullanıcı ve Bilet Listesi" FontSize="13.5" FontWeight="SemiBold" Foreground="#FFFFFF"/>
+                                    <Border Background="#334155" CornerRadius="10" Padding="8,2" Margin="10,0,0,0">
+                                        <TextBlock x:Name="TxtTotalUsersCount" Text="0 Kullanıcı" FontSize="11" Foreground="#94A3B8"/>
+                                    </Border>
+                                </StackPanel>
+                                <TextBlock Grid.Column="1" Text="⚠️ Her hesap tek cihaz kuralına tabidir." FontSize="11" Foreground="#F59E0B" VerticalAlignment="Center"/>
+                            </Grid>
+
+                            <DataGrid Grid.Row="1" x:Name="GridUsers" AutoGenerateColumns="False" 
+                                      CanUserAddRows="False" CanUserDeleteRows="False" IsReadOnly="True"
+                                      Background="Transparent" BorderThickness="0" GridLinesVisibility="None"
+                                      HeadersVisibility="Column" RowBackground="#1E1E22" AlternatingRowBackground="#242428"
+                                      RowHeight="44" FontSize="12.5" Foreground="#F4F4F5">
+                                <DataGrid.Resources>
+                                    <Style TargetType="DataGridColumnHeader">
+                                        <Setter Property="Background" Value="#18181B"/>
+                                        <Setter Property="Foreground" Value="#A1A1AA"/>
+                                        <Setter Property="FontWeight" Value="SemiBold"/>
+                                        <Setter Property="FontSize" Value="12"/>
+                                        <Setter Property="Padding" Value="10,8"/>
+                                        <Setter Property="BorderThickness" Value="0,0,0,1"/>
+                                        <Setter Property="BorderBrush" Value="#333338"/>
+                                    </Style>
+                                    <Style TargetType="DataGridCell">
+                                        <Setter Property="Padding" Value="10,0"/>
+                                        <Setter Property="Template">
+                                            <Setter.Value>
+                                                <ControlTemplate TargetType="DataGridCell">
+                                                    <Border Padding="{TemplateBinding Padding}" Background="{TemplateBinding Background}">
+                                                        <ContentPresenter VerticalAlignment="Center" />
+                                                    </Border>
+                                                </ControlTemplate>
+                                            </Setter.Value>
+                                        </Setter>
+                                    </Style>
+                                </DataGrid.Resources>
+
+                                <DataGrid.Columns>
+                                    <!-- Username -->
+                                    <DataGridTextColumn Header="Kullanıcı" Binding="{Binding Username}" Width="1.1*"/>
+                                    
+                                    <!-- Password -->
+                                    <DataGridTextColumn Header="Şifre" Binding="{Binding Password}" Width="0.9*"/>
+
+                                    <!-- Status -->
+                                    <DataGridTemplateColumn Header="Durum" Width="1*">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <Border CornerRadius="6" Padding="6,2" HorizontalAlignment="Left">
+                                                    <TextBlock Text="{Binding StatusDisplay}" FontSize="11" FontWeight="SemiBold"/>
+                                                </Border>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+
+                                    <!-- Bound Device -->
+                                    <DataGridTextColumn Header="Cihaz (IP/MAC)" Binding="{Binding DeviceDisplay}" Width="1*"/>
+
+                                    <!-- Quota -->
+                                    <DataGridTextColumn Header="Kota" Binding="{Binding QuotaDisplay}" Width="0.8*"/>
+
+                                    <!-- Session -->
+                                    <DataGridTextColumn Header="Oturum" Binding="{Binding SessionDisplay}" Width="0.5*"/>
+
+                                    <!-- Speed -->
+                                    <DataGridTextColumn Header="Hız" Binding="{Binding SpeedDisplay}" Width="0.7*"/>
+
+                                    <!-- Data -->
+                                    <DataGridTextColumn Header="Veri" Binding="{Binding DataDisplay}" Width="1.2*"/>
+
+                                    <!-- Actions -->
+                                    <DataGridTemplateColumn Header="İşlemler" Width="118">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                                    <Button Content="📋" Padding="6,3" FontSize="11" 
+                                                            Background="#334155" Foreground="#F8FAFC" BorderThickness="0"
+                                                            Margin="0,0,6,0" Cursor="Hand" Click="BtnCopyUser_Click"
+                                                            ToolTip="Bilgileri panoya kopyala">
+                                                        <Button.Resources>
+                                                            <Style TargetType="Border">
+                                                                <Setter Property="CornerRadius" Value="4"/>
+                                                            </Style>
+                                                        </Button.Resources>
+                                                    </Button>
+                                                    <Button Content="⚡" Padding="6,3" FontSize="11" 
+                                                            Background="#B45309" Foreground="#FEF3C7" BorderThickness="0"
+                                                            Margin="0,0,6,0" Cursor="Hand" Click="BtnResetUser_Click"
+                                                            ToolTip="Cihaz kilidini kaldırır, hesabı boşa çıkarır">
+                                                        <Button.Resources>
+                                                            <Style TargetType="Border">
+                                                                <Setter Property="CornerRadius" Value="4"/>
+                                                            </Style>
+                                                        </Button.Resources>
+                                                    </Button>
+                                                    <Button Content="🗑" Padding="6,3" FontSize="11" 
+                                                            Background="#991B1B" Foreground="#FEE2E2" BorderThickness="0"
+                                                            Cursor="Hand" Click="BtnDeleteUser_Click"
+                                                            ToolTip="Kullanıcıyı sil">
+                                                        <Button.Resources>
+                                                            <Style TargetType="Border">
+                                                                <Setter Property="CornerRadius" Value="4"/>
+                                                            </Style>
+                                                        </Button.Resources>
+                                                    </Button>
+                                                </StackPanel>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+                                </DataGrid.Columns>
+                            </DataGrid>
+                        </Grid>
+                    </Border>
+                </Grid>
+            </TabItem>
+
+            <!-- TAB 3: İZLEME, KOTA & DNS LOGU -->
+            <TabItem Header="📊 İzleme &amp; Kota" Style="{StaticResource ModernTabItem}">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" Margin="0,14,0,0">
+                    <StackPanel>
+                        <!-- Speed + Session Stats -->
+                        <Border Style="{StaticResource ModernCard}">
+                            <StackPanel>
+                                <TextBlock Text="Hotspot Toplam Hızı ve Oturumlar" FontSize="14" FontWeight="SemiBold" Foreground="#FFFFFF" Margin="0,0,0,12"/>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="12"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="12"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="12"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Border Grid.Column="0" Background="#1E1E22" BorderBrush="#3F3F46" BorderThickness="1" CornerRadius="8" Padding="12,10">
+                                        <StackPanel>
+                                            <TextBlock Text="⬇ İndirme" FontSize="11" Foreground="#A1A1AA"/>
+                                            <TextBlock x:Name="TxtSpeedDown" Text="-" FontSize="18" FontWeight="Bold" Foreground="#60A5FA"/>
+                                        </StackPanel>
+                                    </Border>
+                                    <Border Grid.Column="2" Background="#1E1E22" BorderBrush="#3F3F46" BorderThickness="1" CornerRadius="8" Padding="12,10">
+                                        <StackPanel>
+                                            <TextBlock Text="⬆ Yükleme" FontSize="11" Foreground="#A1A1AA"/>
+                                            <TextBlock x:Name="TxtSpeedUp" Text="-" FontSize="18" FontWeight="Bold" Foreground="#34D399"/>
+                                        </StackPanel>
+                                    </Border>
+                                    <Border Grid.Column="4" Background="#1E1E22" BorderBrush="#3F3F46" BorderThickness="1" CornerRadius="8" Padding="12,10">
+                                        <StackPanel>
+                                            <TextBlock Text="👥 Aktif Oturum" FontSize="11" Foreground="#A1A1AA"/>
+                                            <TextBlock x:Name="TxtActiveSessions" Text="0 oturum" FontSize="18" FontWeight="Bold" Foreground="#FFFFFF"/>
+                                        </StackPanel>
+                                    </Border>
+                                    <Border Grid.Column="6" Background="#1E1E22" BorderBrush="#3F3F46" BorderThickness="1" CornerRadius="8" Padding="12,10">
+                                        <StackPanel>
+                                            <TextBlock Text="🔍 DNS Sorgusu" FontSize="11" Foreground="#A1A1AA"/>
+                                            <TextBlock x:Name="TxtDnsTotal" Text="0 sorgu" FontSize="18" FontWeight="Bold" Foreground="#FBBF24"/>
+                                        </StackPanel>
+                                    </Border>
+                                </Grid>
+                                <TextBlock Text="Hız, hotspotun toplamıdır (cihaz başına gerçek Mbps, Windows'ta sürücüsüz ölçülemez). Cihaz/kullanıcı detayı aşağıdaki DNS aktivitesinden izlenir." 
+                                           FontSize="11" Foreground="#71717A" Margin="2,8,0,0" TextWrapping="Wrap"/>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Quota + Limits Panel -->
+                        <Border Style="{StaticResource ModernCard}">
+                            <StackPanel>
+                                <Grid Margin="0,0,0,4">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="⏱ Kota &amp; Hız Limiti (Hesap / Cihaz)" FontSize="14" FontWeight="SemiBold" Foreground="#FFFFFF" VerticalAlignment="Center"/>
+                                    <Border Grid.Column="1" Background="#1E1E22" CornerRadius="6" Padding="8,3" BorderBrush="#3F3F46" BorderThickness="1">
+                                        <TextBlock x:Name="TxtDriverStatus" Text="Sürücü: -" FontSize="11" Foreground="#A1A1AA"/>
+                                    </Border>
+                                </Grid>
+                                <TextBlock Text="Kullanıcılar listesinden bir hesap ya da aşağıdaki aktiviteden bir cihaz seçip değer girin (0 = sınırsız). Süre dolunca veya veri kotası bitince oturum otomatik kapatılır." 
+                                           FontSize="11.5" Foreground="#94A3B8" Margin="0,0,0,10" TextWrapping="Wrap"/>
+                                <Grid Margin="0,0,0,10">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="10"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock x:Name="TxtQuotaTarget" Grid.Column="0" Text="Hesap: -" FontSize="12.5" Foreground="#E4E4E7" VerticalAlignment="Center" TextWrapping="Wrap"/>
+                                    <TextBlock x:Name="TxtDeviceTarget" Grid.Column="2" Text="Cihaz: -" FontSize="12.5" Foreground="#E4E4E7" VerticalAlignment="Center" TextWrapping="Wrap"/>
+                                </Grid>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="8"/>
+                                        <ColumnDefinition Width="80"/>
+                                        <ColumnDefinition Width="8"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="8"/>
+                                        <ColumnDefinition Width="80"/>
+                                        <ColumnDefinition Width="8"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="8"/>
+                                        <ColumnDefinition Width="80"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="8"/>
+                                        <RowDefinition Height="Auto"/>
+                                    </Grid.RowDefinitions>
+                                    <TextBlock Grid.Row="0" Grid.Column="0" Text="Hız (Mbps):" FontSize="12" Foreground="#D4D4D8" VerticalAlignment="Center"/>
+                                    <TextBox x:Name="TxtSpeedMbps" Grid.Row="0" Grid.Column="2" Style="{StaticResource ModernTextBox}" Text="10" Height="34" ToolTip="Örn: 10 (0 = sınırsız)"/>
+                                    <TextBlock Grid.Row="0" Grid.Column="4" Text="Veri (GB):" FontSize="12" Foreground="#D4D4D8" VerticalAlignment="Center"/>
+                                    <TextBox x:Name="TxtDataGb" Grid.Row="0" Grid.Column="6" Style="{StaticResource ModernTextBox}" Text="5" Height="34" ToolTip="Örn: 5 (0 = sınırsız)"/>
+                                    <TextBlock Grid.Row="0" Grid.Column="8" Text="Süre (dk):" FontSize="12" Foreground="#D4D4D8" VerticalAlignment="Center"/>
+                                    <TextBox x:Name="TxtQuotaMinutes" Grid.Row="0" Grid.Column="10" Style="{StaticResource ModernTextBox}" Text="60" Height="34" ToolTip="Örn: 60 (0 = sınırsız)"/>
+
+                                    <StackPanel Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="11" Orientation="Horizontal">
+                                        <Button Content="👤 Hesaba Ata" Background="#7C3AED" Foreground="#FFFFFF" BorderThickness="0"
+                                                Padding="12,7" FontSize="12" FontWeight="SemiBold" Cursor="Hand" Click="BtnApplyUserLimits_Click" Margin="0,0,8,0">
+                                            <Button.Resources>
+                                                <Style TargetType="Border">
+                                                    <Setter Property="CornerRadius" Value="8"/>
+                                                </Style>
+                                            </Button.Resources>
+                                        </Button>
+                                        <Button Content="📱 Cihaza Ata" Background="#2563EB" Foreground="#FFFFFF" BorderThickness="0"
+                                                Padding="12,7" FontSize="12" FontWeight="SemiBold" Cursor="Hand" Click="BtnApplyDeviceLimits_Click" Margin="0,0,8,0">
+                                            <Button.Resources>
+                                                <Style TargetType="Border">
+                                                    <Setter Property="CornerRadius" Value="8"/>
+                                                </Style>
+                                            </Button.Resources>
+                                        </Button>
+                                        <Button Content="♾ Seçiliyi Sınırsız Yap" Background="#334155" Foreground="#F8FAFC" BorderThickness="0"
+                                                Padding="12,7" FontSize="12" Cursor="Hand" Click="BtnClearLimits_Click" Margin="0,0,8,0">
+                                            <Button.Resources>
+                                                <Style TargetType="Border">
+                                                    <Setter Property="CornerRadius" Value="8"/>
+                                                </Style>
+                                            </Button.Resources>
+                                        </Button>
+                                        <Button Content="↺ Kullanımı Sıfırla" Background="#B45309" Foreground="#FEF3C7" BorderThickness="0"
+                                                Padding="12,7" FontSize="12" Cursor="Hand" Click="BtnResetUsage_Click"
+                                                ToolTip="Seçili hesabın süre+veri sayacını sıfırlar">
+                                            <Button.Resources>
+                                                <Style TargetType="Border">
+                                                    <Setter Property="CornerRadius" Value="8"/>
+                                                </Style>
+                                            </Button.Resources>
+                                        </Button>
+                                    </StackPanel>
+                                </Grid>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Device Activity -->
+                        <Border Style="{StaticResource ModernCard}">
+                            <StackPanel>
+                                <TextBlock Text="📡 Cihaz Aktivitesi (DNS üzerinden)" FontSize="14" FontWeight="SemiBold" Foreground="#FFFFFF" Margin="0,0,0,10"/>
+                                <DataGrid x:Name="GridActivity" AutoGenerateColumns="False" 
+                                          CanUserAddRows="False" CanUserDeleteRows="False" IsReadOnly="True"
+                                          Background="Transparent" BorderThickness="0" GridLinesVisibility="None"
+                                          HeadersVisibility="Column" RowBackground="#1E1E22" AlternatingRowBackground="#242428"
+                                          RowHeight="36" FontSize="12.5" Foreground="#F4F4F5" MaxHeight="180" ScrollViewer.VerticalScrollBarVisibility="Auto">
+                                    <DataGrid.Resources>
+                                        <Style TargetType="DataGridColumnHeader">
+                                            <Setter Property="Background" Value="#18181B"/>
+                                            <Setter Property="Foreground" Value="#A1A1AA"/>
+                                            <Setter Property="FontWeight" Value="SemiBold"/>
+                                            <Setter Property="FontSize" Value="12"/>
+                                            <Setter Property="Padding" Value="10,8"/>
+                                            <Setter Property="BorderThickness" Value="0,0,0,1"/>
+                                            <Setter Property="BorderBrush" Value="#333338"/>
+                                        </Style>
+                                    </DataGrid.Resources>
+                                    <DataGrid.Columns>
+                                        <DataGridTextColumn Header="IP" Binding="{Binding Ip}" Width="1*"/>
+                                        <DataGridTextColumn Header="MAC" Binding="{Binding MacDisplay}" Width="1.3*"/>
+                                        <DataGridTextColumn Header="Kullanıcı" Binding="{Binding UserDisplay}" Width="1*"/>
+                                        <DataGridTextColumn Header="DNS" Binding="{Binding Queries}" Width="0.6*"/>
+                                        <DataGridTextColumn Header="Veri" Binding="{Binding DataDisplay}" Width="0.8*"/>
+                                        <DataGridTextColumn Header="Son Aktivite" Binding="{Binding LastSeenDisplay}" Width="0.9*"/>
+                                    </DataGrid.Columns>
+                                </DataGrid>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- DNS Log -->
+                        <Border Style="{StaticResource ModernCard}">
+                            <StackPanel>
+                                <Grid Margin="0,0,0,10">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                        <TextBlock Text="🔍 DNS Logu (hangi cihaz, hangi siteye, ne zaman)" FontSize="14" FontWeight="SemiBold" Foreground="#FFFFFF" VerticalAlignment="Center"/>
+                                        <Border Background="#334155" CornerRadius="10" Padding="8,2" Margin="10,0,0,0" VerticalAlignment="Center">
+                                            <TextBlock x:Name="TxtDnsLogCount" Text="0 kayıt" FontSize="11" Foreground="#94A3B8"/>
+                                        </Border>
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                                        <TextBox x:Name="TxtDnsFilter" Style="{StaticResource ModernTextBox}" Width="160" Height="32" Margin="0,0,8,0"
+                                                 ToolTip="Site / IP / kullanıcı filtresi" TextChanged="TxtDnsFilter_TextChanged"/>
+                                        <Button Content="📤 CSV" Padding="10,5" FontSize="11.5" Margin="0,0,8,0"
+                                                Background="#334155" Foreground="#F8FAFC" BorderThickness="0" Cursor="Hand"
+                                                Click="BtnExportDns_Click" ToolTip="Logu CSV olarak dışa aktar">
+                                            <Button.Resources>
+                                                <Style TargetType="Border">
+                                                    <Setter Property="CornerRadius" Value="6"/>
+                                                </Style>
+                                            </Button.Resources>
+                                        </Button>
+                                        <Button Content="🗑 Temizle" Padding="10,5" FontSize="11.5"
+                                                Background="#991B1B" Foreground="#FEE2E2" BorderThickness="0" Cursor="Hand"
+                                                Click="BtnClearDns_Click">
+                                            <Button.Resources>
+                                                <Style TargetType="Border">
+                                                    <Setter Property="CornerRadius" Value="6"/>
+                                                </Style>
+                                            </Button.Resources>
+                                        </Button>
+                                    </StackPanel>
+                                </Grid>
+                                <DataGrid x:Name="GridDnsLog" AutoGenerateColumns="False" 
+                                          CanUserAddRows="False" CanUserDeleteRows="False" IsReadOnly="True"
+                                          Background="Transparent" BorderThickness="0" GridLinesVisibility="None"
+                                          HeadersVisibility="Column" RowBackground="#1E1E22" AlternatingRowBackground="#242428"
+                                          RowHeight="32" FontSize="12" Foreground="#F4F4F5" MaxHeight="240" ScrollViewer.VerticalScrollBarVisibility="Auto">
+                                    <DataGrid.Resources>
+                                        <Style TargetType="DataGridColumnHeader">
+                                            <Setter Property="Background" Value="#18181B"/>
+                                            <Setter Property="Foreground" Value="#A1A1AA"/>
+                                            <Setter Property="FontWeight" Value="SemiBold"/>
+                                            <Setter Property="FontSize" Value="12"/>
+                                            <Setter Property="Padding" Value="10,8"/>
+                                            <Setter Property="BorderThickness" Value="0,0,0,1"/>
+                                            <Setter Property="BorderBrush" Value="#333338"/>
+                                        </Style>
+                                    </DataGrid.Resources>
+                                    <DataGrid.Columns>
+                                        <DataGridTextColumn Header="Saat" Binding="{Binding TimeDisplay}" Width="0.6*"/>
+                                        <DataGridTextColumn Header="Kullanıcı / IP" Binding="{Binding UserDisplay}" Width="1.5*"/>
+                                        <DataGridTextColumn Header="Alan Adı" Binding="{Binding Domain}" Width="2*"/>
+                                        <DataGridTextColumn Header="Sonuç" Binding="{Binding ResultDisplay}" Width="1.3*"/>
+                                    </DataGrid.Columns>
+                                </DataGrid>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+
+            <!-- TAB 4: BAĞLI DONANIMLAR -->
+            <TabItem Header="📱 Bağlı Cihazlar" Style="{StaticResource ModernTabItem}">
+                <Border Style="{StaticResource ModernCard}" Margin="0,14,0,0">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+
+                        <!-- Header -->
+                        <Grid Grid.Row="0" Margin="0,0,0,12">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                <TextBlock Text="📱" FontSize="16" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                <TextBlock Text="Wi-Fi Donanımına Bağlı Cihazlar" FontSize="14" FontWeight="SemiBold" Foreground="#FFFFFF" VerticalAlignment="Center"/>
+                                <Border Background="#3F3F46" CornerRadius="10" Padding="8,2" Margin="10,0,0,0" VerticalAlignment="Center">
+                                    <TextBlock x:Name="TxtClientsCount" Text="0 Cihaz" FontSize="11" FontWeight="Medium" Foreground="#E4E4E7"/>
+                                </Border>
+                            </StackPanel>
+
+                            <Button Grid.Column="1" x:Name="BtnRefreshClients" Content="🔄 Yenile" 
+                                    Background="#27272A" Foreground="#D4D4D8" BorderBrush="#3F3F46" BorderThickness="1"
+                                    Padding="12,5" FontSize="11.5" Cursor="Hand" Click="BtnRefreshClients_Click">
+                                <Button.Resources>
+                                    <Style TargetType="Border">
+                                        <Setter Property="CornerRadius" Value="6"/>
+                                    </Style>
+                                </Button.Resources>
+                            </Button>
+                        </Grid>
+
+                        <!-- DataGrid -->
+                        <DataGrid Grid.Row="1" x:Name="GridClients" AutoGenerateColumns="False" 
+                                  CanUserAddRows="False" CanUserDeleteRows="False" IsReadOnly="True"
+                                  Background="Transparent" BorderThickness="0" GridLinesVisibility="None"
+                                  HeadersVisibility="Column" RowBackground="#1E1E22" AlternatingRowBackground="#242428"
+                                  RowHeight="42" FontSize="13" Foreground="#F4F4F5">
+                            <DataGrid.Resources>
+                                <Style TargetType="DataGridColumnHeader">
+                                    <Setter Property="Background" Value="#18181B"/>
+                                    <Setter Property="Foreground" Value="#A1A1AA"/>
+                                    <Setter Property="FontWeight" Value="SemiBold"/>
+                                    <Setter Property="FontSize" Value="12"/>
+                                    <Setter Property="Padding" Value="12,8"/>
+                                    <Setter Property="BorderThickness" Value="0,0,0,1"/>
+                                    <Setter Property="BorderBrush" Value="#333338"/>
+                                </Style>
+                                <Style TargetType="DataGridCell">
+                                    <Setter Property="Padding" Value="12,0"/>
+                                    <Setter Property="Template">
+                                        <Setter.Value>
+                                            <ControlTemplate TargetType="DataGridCell">
+                                                <Border Padding="{TemplateBinding Padding}" Background="{TemplateBinding Background}">
+                                                    <ContentPresenter VerticalAlignment="Center" />
+                                                </Border>
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                </Style>
+                            </DataGrid.Resources>
+
+                            <DataGrid.Columns>
+                                <DataGridTemplateColumn Header="Cihaz Adı" Width="2*">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                                <TextBlock Text="💻 " FontSize="14" Foreground="#60A5FA"/>
+                                                <TextBlock Text="{Binding DeviceName}" FontWeight="Medium" Foreground="#FFFFFF"/>
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+
+                                <DataGridTextColumn Header="IP Adresi" Binding="{Binding IpAddress}" Width="1.5*"/>
+                                <DataGridTextColumn Header="MAC Adresi" Binding="{Binding MacAddress}" Width="1.8*"/>
+                                <DataGridTemplateColumn Header="Durum" Width="1.2*">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <Border Background="#064E3B" CornerRadius="6" Padding="8,3" HorizontalAlignment="Left">
+                                                <TextBlock Text="{Binding Status}" FontSize="11" FontWeight="SemiBold" Foreground="#34D399"/>
+                                            </Border>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                            </DataGrid.Columns>
+                        </DataGrid>
+
+                        <!-- Empty State -->
+                        <StackPanel Grid.Row="1" x:Name="PanelEmptyClients" VerticalAlignment="Center" HorizontalAlignment="Center" Visibility="Visible">
+                            <TextBlock Text="📡" FontSize="34" HorizontalAlignment="Center" Margin="0,0,0,8" Opacity="0.6"/>
+                            <TextBlock Text="Henüz bağlı cihaz yok" FontSize="14" FontWeight="SemiBold" Foreground="#A1A1AA" HorizontalAlignment="Center"/>
+                            <TextBlock Text="Cihazlar bu Wi-Fi ağına bağlandığında otomatik olarak burada listelenecektir." 
+                                       FontSize="11.5" Foreground="#71717A" HorizontalAlignment="Center" Margin="0,4,0,0"/>
+                        </StackPanel>
+                    </Grid>
+                </Border>
+            </TabItem>
+        </TabControl>
+
+        <!-- 3. FOOTER STATUS BAR -->
+        <Grid Grid.Row="2" Margin="4,8,4,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+
+            <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                <TextBlock Text="ℹ️ Pencere kapatıldığında arka planda çalışır. Tek tıkla bilet üretebilirsiniz." 
+                           FontSize="11" Foreground="#71717A"/>
+            </StackPanel>
+
+            <TextBlock Grid.Column="1" Text="Windows 11 Native + Captive Portal v2.0" FontSize="11" Foreground="#52525B"/>
+        </Grid>
+    </Grid>
+</Window>
