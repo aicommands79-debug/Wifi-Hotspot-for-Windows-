@@ -1,3 +1,10 @@
 @echo off
 title Windows 11 Wi-Fi Hotspot & Web Portali
-start "" "%~dp0bin\Release\net10.0-windows10.0.22000.0\Win11HotspotManager.exe"
+rem En yeni surum klasorunu bul ve calistir (Yayin\r01, r02, ...)
+set "BASE=%~dp0Yayin"
+for /f "delims=" %%i in ('dir "%BASE%" /b /ad /o-n 2^>nul') do (
+  start "" "%BASE%\%%i\Win11HotspotManager.exe"
+  exit /b 0
+)
+echo Yayin klasoru bulunamadi: %BASE%
+pause
