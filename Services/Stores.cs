@@ -212,4 +212,117 @@ namespace Win11HotspotManager.Services
             try { File.WriteAllText(_path, JsonSerializer.Serialize(_domains, new JsonSerializerOptions { WriteIndented = true })); } catch { }
         }
     }
+
+    /// <summary>IP → işletim sistemi (portal isteklerindeki User-Agent'tan). Oturumluk tutulur.</summary>
+    public class DeviceInfoStore
+    {
+        private readonly object _lock = new();
+        private readonly Dictionary<string, string> _osByIp = new(StringComparer.OrdinalIgnoreCase);
+
+        public void RecordSeen(string ip, string userAgent)
+        {
+            if (string.IsNullOrEmpty(ip)) return;
+            string os = ParseOs(userAgent);
+            if (os == "-") return;
+            lock (_lock) { _osByIp[ip] = os; }
+        }
+
+        public string GetOs(string? ip)
+        {
+            if (string.IsNullOrEmpty(ip)) return "-";
+            lock (_lock) { return _osByIp.TryGetValue(ip, out string? os) ? os : "-"; }
+        }
+
+        public static string ParseOs(string? ua)
+        {
+            if (string.IsNullOrEmpty(ua)) return "-";
+            if (ua.Contains("Android", StringComparison.OrdinalIgnoreCase)) return "Android";
+            if (ua.Contains("iPhone", StringComparison.OrdinalIgnoreCase)) return "iOS";
+            if (ua.Contains("iPad", StringComparison.OrdinalIgnoreCase)) return "iPadOS";
+            if (ua.Contains("Windows NT", StringComparison.OrdinalIgnoreCase)) return "Windows";
+            if (ua.Contains("Macintosh", StringComparison.OrdinalIgnoreCase) || ua.Contains("Mac OS X", StringComparison.OrdinalIgnoreCase)) return "macOS";
+            if (ua.Contains("CrOS", StringComparison.OrdinalIgnoreCase)) return "ChromeOS";
+            if (ua.Contains("Linux", StringComparison.OrdinalIgnoreCase)) return "Linux";
+            return "-";
+        }
+    }
+
+    /// <summary>MAC bazında engelli cihazlar (macblock.json içinde saklanır).</summary>
+    public class MacBlockStore
+    {
+        private readonly string _path;
+        private readonly object _lock = new();
+        private HashSet<string> _blocked = new(StringComparer.OrdinalIgnoreCase);
+
+        public MacBlockStore()
+        {
+            string dir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Win11HotspotManager");
+            try { Directory.CreateDirectory(dir); } catch { }
+            _path = Path.Combine(dir, "macblock.json");
+            Load();
+        }
+
+        public void Load()
+        {
+            lock (_lock)
+            {
+                try
+                {
+                    if (File.Exists(_path))
+                    {
+                        var loaded = JsonSerializer.Deserialize<List<string>>(File.ReadAllText(_path));
+                        if (loaded != null)
+                            _blocked = loaded.Select(Normalize).Where(m => m != null).Cast<string>().ToHashSet(StringComparer.OrdinalIgnoreCase);
+                    }
+                }
+                catch { }
+            }
+        }
+
+        public List<string> GetAll()
+        {
+            lock (_lock) { return _blocked.OrderBy(m => m).ToList(); }
+        }
+
+        public bool Toggle(string mac)
+        {
+            string? norm = Normalize(mac);
+            if (norm == null) return false;
+            lock (_lock)
+            {
+                bool nowBlocked;
+                if (_blocked.Contains(norm)) { _blocked.Remove(norm); nowBlocked = false; }
+                else { _blocked.Add(norm); nowBlocked = true; }
+                SaveLocked();
+                return nowBlocked;
+            }
+        }
+
+        public bool IsBlocked(string? mac)
+        {
+            string? norm = Normalize(mac);
+            if (norm == null) return false;
+            lock (_lock) { return _blocked.Contains(norm); }
+        }
+
+        /// <summary>AA:BB:CC:DD:EE:FF / AA-BB-... / AABBCC... → AABBCCDDEEFF. Geçersizse null.</summary>
+        public static string? Normalize(string? mac)
+        {
+            if (string.IsNullOrWhiteSpace(mac)) return null;
+            string clean = new string(mac.Where(Uri.IsHexDigit).ToArray()).ToUpperInvariant();
+            return clean.Length == 12 ? clean : null;
+        }
+
+        public static string Display(string? mac)
+        {
+            string? norm = Normalize(mac);
+            if (norm == null) return mac ?? "-";
+            return $"{norm.Substring(0, 2)}:{norm.Substring(2, 2)}:{norm.Substring(4, 2)}:{norm.Substring(6, 2)}:{norm.Substring(8, 2)}:{norm.Substring(10, 2)}";
+        }
+
+        private void SaveLocked()
+        {
+            try { File.WriteAllText(_path, JsonSerializer.Serialize(_blocked.ToList(), new JsonSerializerOptions { WriteIndented = true })); } catch { }
+        }
+    }
 }

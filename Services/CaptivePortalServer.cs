@@ -39,6 +39,12 @@ namespace Win11HotspotManager.Services
 
         public event Action<string, string, bool>? LoginAttempted;
 
+        /// <summary>Her HTTP isteğinde tetiklenir: (clientIp, userAgent).</summary>
+        public event Action<string, string>? ClientSeen;
+
+        /// <summary>Engelli MAC kontrolü (true = bu cihaz engelli).</summary>
+        public Func<string, bool>? MacBlockedChecker;
+
         public bool IsRunning => _isRunning;
         public int Port => 8080;
         public bool Port80Active { get; private set; }
@@ -189,6 +195,22 @@ namespace Win11HotspotManager.Services
                     string method = requestLineParts[0].ToUpperInvariant();
                     string rawTarget = requestLineParts[1];
 
+                    // User-Agent yakala (cihaz bilgisi için)
+                    try
+                    {
+                        foreach (var line in lines)
+                        {
+                            if (string.IsNullOrEmpty(line)) break;
+                            if (line.StartsWith("User-Agent:", StringComparison.OrdinalIgnoreCase))
+                            {
+                                string ua = line.Substring("User-Agent:".Length).Trim();
+                                if (ua.Length > 0) ClientSeen?.Invoke(clientIp, ua);
+                                break;
+                            }
+                        }
+                    }
+                    catch { }
+
                     // Absolute-URI (proxy/probe) -> path'e indir: http://host/connecttest.txt -> /connecttest.txt
                     string path = NormalizePath(rawTarget);
 
@@ -217,6 +239,12 @@ namespace Win11HotspotManager.Services
                         query.TryGetValue("password", out string? qp);
                         if (!string.IsNullOrEmpty(qu) && !string.IsNullOrEmpty(qp))
                         {
+                            if (IsMacBlocked(clientMac))
+                            {
+                                string blockHtml = GenerateLoginPageHtml(clientIp, clientMac, false, "Bu cihaz engellendi. Yöneticinize başvurun.", qu);
+                                await SendResponseAsync(stream, 200, "text/html; charset=utf-8", blockHtml);
+                                return;
+                            }
                             var qrAuth = _userManager.Authenticate(qu, qp, clientIp, clientMac);
                             LoginAttempted?.Invoke(qu, clientIp, qrAuth.Success);
                             string qrHtml = GenerateLoginPageHtml(clientIp, clientMac, qrAuth.Success, qrAuth.Message, qu);
@@ -404,6 +432,12 @@ namespace Win11HotspotManager.Services
             string username, password;
             ParseFormOrJson(body, out username, out password);
 
+            if (IsMacBlocked(clientMac))
+            {
+                await SendResponseAsync(stream, 200, "application/json", "{\"success\":false,\"message\":\"Bu cihaz engellendi.\"}");
+                return;
+            }
+
             var auth = _userManager.Authenticate(username, password, clientIp, clientMac);
             LoginAttempted?.Invoke(username, clientIp, auth.Success);
 
@@ -416,11 +450,24 @@ namespace Win11HotspotManager.Services
             string username, password;
             ParseFormOrJson(body, out username, out password);
 
+            if (IsMacBlocked(clientMac))
+            {
+                string blockHtml = GenerateLoginPageHtml(clientIp, clientMac, false, "Bu cihaz engellendi. Yöneticinize başvurun.", username);
+                await SendResponseAsync(stream, 200, "text/html; charset=utf-8", blockHtml);
+                return;
+            }
+
             var auth = _userManager.Authenticate(username, password, clientIp, clientMac);
             LoginAttempted?.Invoke(username, clientIp, auth.Success);
 
             string html = GenerateLoginPageHtml(clientIp, clientMac, auth.Success, auth.Message, username);
             await SendResponseAsync(stream, 200, "text/html; charset=utf-8", html);
+        }
+
+        private bool IsMacBlocked(string clientMac)
+        {
+            try { return MacBlockedChecker?.Invoke(clientMac) == true; }
+            catch { return false; }
         }
 
         private void ParseFormOrJson(string body, out string username, out string password)

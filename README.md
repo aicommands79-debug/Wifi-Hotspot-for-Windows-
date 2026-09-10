@@ -46,6 +46,9 @@ Windows 11 üzerinde bilgisayarınızın internetini paylaşmanızı ve kullanı
 - **🎟 Toplu bilet + yazdırma**: 1-100 adet bilet tek tıkla üretilir, yazdırılabilir liste ve panoya kopyalama ile.
 - **🎨 Portal görünümü**: İşletme adı ve duyuru metni giriş sayfasına anında yansır.
 - **⏰ Zamanlayıcı**: Her gün belirlenen saat aralığında hotspot otomatik açılır/kapanır (elle durdurmada 15 dk zorlamaz).
+- **🎟 Kişisel bilet QR'ı**: Kullanıcı satırındaki 🔳 butonuyla o bilete özel QR açılır; misafir okutunca girişi otomatik yapılır.
+- **⛔ MAC engelleme**: Bağlı Cihazlar'da satırdaki 🚫 ile cihaz engellenir — paketleri sürücüde düşürülür, giriş denemesi de reddedilir (`macblock.json`). Sürücü pasifken engelleme çalışmaz.
+- **🔍 Cihaz bilgisi**: Bağlı Cihazlar ve aktivite tablosunda üretici (MAC-OUI, IEEE listesinden) ve işletim sistemi (portal isteklerinden) görünür.
 
 ---
 

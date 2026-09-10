@@ -9,5 +9,11 @@ namespace Win11HotspotManager.Models
         public string MacAddress { get; set; } = "-";
         public DateTime ConnectedTime { get; set; } = DateTime.Now;
         public string Status { get; set; } = "Bağlı";
+        public string Manufacturer { get; set; } = "-";
+        public string Os { get; set; } = "-";
+        public bool IsBlocked { get; set; } = false;
+        public string BlockDisplay => IsBlocked ? "⛔ Engelli" : "✔ Açık";
+        public string BlockButtonText => IsBlocked ? "✅" : "🚫";
+        public string BlockButtonTip => IsBlocked ? "Engeli kaldır" : "Cihazı engelle (interneti kesilir)";
     }
 }

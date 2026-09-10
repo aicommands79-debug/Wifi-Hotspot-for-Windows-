@@ -14,6 +14,8 @@ namespace Win11HotspotManager.Services
         public DateTime LastSeen { get; set; }
         public string Mac { get; set; } = string.Empty;
         public string MacDisplay => string.IsNullOrEmpty(Mac) || Mac == "-" ? "-" : Mac;
+        public string Vendor { get; set; } = "-";
+        public string Os { get; set; } = "-";
         public long DataUsedBytes { get; set; }
         public string DataDisplay => Models.PortalUser.FormatBytes(DataUsedBytes);
         public string LastSeenDisplay

@@ -35,6 +35,9 @@ namespace Win11HotspotManager.Services
         public bool IsAvailable { get; }
         public bool IsRunning { get; private set; }
         public string Status { get; private set; } = "Başlatılmadı";
+
+        /// <summary>Engelli MAC kontrolü (true = düşür).</summary>
+        public Func<string, bool>? MacBlockedChecker;
         public long TotalSeen;
         public long TotalDropped;
 
@@ -221,6 +224,15 @@ namespace Win11HotspotManager.Services
 
                 // Cihaz politikası (MAC)
                 string mac = GetMacCached(clientIp);
+
+                // MAC engeli: sayaçlara işlemeden düşür
+                try
+                {
+                    if (!string.IsNullOrEmpty(mac) && mac != "-" && MacBlockedChecker?.Invoke(mac) == true)
+                        return false;
+                }
+                catch { }
+
                 DeviceLimit? devLimit = !string.IsNullOrEmpty(mac) && mac != "-" ? _deviceLimitForMac(mac) : null;
 
                 long devUsed = 0;

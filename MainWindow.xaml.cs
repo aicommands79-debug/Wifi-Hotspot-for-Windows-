@@ -42,6 +42,8 @@ namespace Win11HotspotManager
         private readonly DeviceLimitStore _deviceLimits = new();
         private readonly PortalSettingsStore _portalSettings = new();
         private readonly BlocklistStore _blocklist = new();
+        private readonly DeviceInfoStore _deviceInfos = new();
+        private readonly MacBlockStore _macBlock = new();
         private TrafficMeter? _trafficMeter;
         private System.Windows.Threading.DispatcherTimer? _schedTimer;
         private bool _schedulerOwned = false;
@@ -69,7 +71,10 @@ namespace Win11HotspotManager
             _dnsGatingServer.DnsQueried += OnDnsQueried;
             _dnsGatingServer.BlocklistChecker = domain => _blocklist.IsBlocked(domain);
             _captivePortalServer.SettingsProvider = () => _portalSettings.Get();
+            _captivePortalServer.ClientSeen += (ip, ua) => Dispatcher.InvokeAsync(() => _deviceInfos.RecordSeen(ip, ua));
+            _captivePortalServer.MacBlockedChecker = mac => _macBlock.IsBlocked(mac);
             _trafficMeter = new TrafficMeter(_userManager, mac => _deviceLimits.Get(mac));
+            _trafficMeter.MacBlockedChecker = mac => _macBlock.IsBlocked(mac);
 
             Loaded += MainWindow_Loaded;
             Closing += MainWindow_Closing;
@@ -89,6 +94,7 @@ namespace Win11HotspotManager
             GridUsers.SelectionChanged += GridUsers_SelectionChanged;
             GridActivity.SelectionChanged += GridActivity_SelectionChanged;
             UpdateDriverStatus();
+            OuiLookup.EnsureLoaded();
 
             var ps = _portalSettings.Get();
             TxtBusinessName.Text = ps.BusinessName;
@@ -887,16 +893,20 @@ namespace Win11HotspotManager
                 var rows = _usageTracker.GetActivity(_userManager);
                 if (_trafficMeter != null && _trafficMeter.IsRunning)
                 {
-                    foreach (var row in rows)
+                foreach (var row in rows)
+                {
+                    try
                     {
-                        try
+                        row.Mac = _trafficMeter.GetMacCached(row.Ip);
+                        if (!string.IsNullOrEmpty(row.Mac) && row.Mac != "-")
                         {
-                            row.Mac = _trafficMeter.GetMacCached(row.Ip);
-                            if (!string.IsNullOrEmpty(row.Mac) && row.Mac != "-")
-                                row.DataUsedBytes = _trafficMeter.GetDeviceBytes(row.Mac);
+                            row.DataUsedBytes = _trafficMeter.GetDeviceBytes(row.Mac);
+                            row.Vendor = OuiLookup.Lookup(row.Mac);
                         }
-                        catch { }
+                        row.Os = _deviceInfos.GetOs(row.Ip);
                     }
+                    catch { }
+                }
                 }
                 GridActivity.ItemsSource = null;
                 GridActivity.ItemsSource = rows;
@@ -1138,6 +1148,17 @@ namespace Win11HotspotManager
             {
                 TxtClientsCount.Text = $"{clients.Count} Cihaz";
 
+                foreach (var c in clients)
+                {
+                    try
+                    {
+                        c.Manufacturer = OuiLookup.Lookup(c.MacAddress);
+                        c.Os = _deviceInfos.GetOs(c.IpAddress);
+                        c.IsBlocked = _macBlock.IsBlocked(c.MacAddress);
+                    }
+                    catch { }
+                }
+
                 if (clients.Count > 0)
                 {
                     PanelEmptyClients.Visibility = Visibility.Collapsed;
@@ -1152,6 +1173,23 @@ namespace Win11HotspotManager
                     PanelEmptyClients.Visibility = Visibility.Visible;
                 }
             });
+        }
+
+        private void BtnBlockDevice_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is Button btn && btn.DataContext is ConnectedClient client)
+            {
+                if (string.IsNullOrEmpty(client.MacAddress) || client.MacAddress == "-")
+                {
+                    ShowAlert("Bu cihazın MAC adresi bilinmiyor.", isError: true);
+                    return;
+                }
+                bool nowBlocked = _macBlock.Toggle(client.MacAddress);
+                client.IsBlocked = nowBlocked;
+                ShowAlert(nowBlocked
+                    ? $"⛔ '{client.MacAddress}' engellendi. İnterneti kesildi, giriş de yapamaz."
+                    : $"✅ '{client.MacAddress}' engeli kaldırıldı.", isError: false);
+            }
         }
 
         private void OnProfileUpdated(string profileName)
