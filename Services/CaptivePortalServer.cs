@@ -45,6 +45,9 @@ namespace Win11HotspotManager.Services
         public bool Port8080Active { get; private set; }
         public string LastError { get; private set; } = string.Empty;
 
+        /// <summary>İşletme adı + duyuru (her istekte taze okunur, kaydetmek yeterli).</summary>
+        public Func<PortalSettings>? SettingsProvider;
+
         public CaptivePortalServer(UserManager userManager)
         {
             _userManager = userManager;
@@ -504,6 +507,11 @@ namespace Win11HotspotManager.Services
 
         private string GenerateLoginPageHtml(string clientIp, string clientMac, bool isAuthorized, string? alertMessage, string? username)
         {
+            PortalSettings? portalSettings = null;
+            try { portalSettings = SettingsProvider?.Invoke(); } catch { }
+            string businessName = portalSettings?.BusinessName?.Trim() ?? string.Empty;
+            string announcement = portalSettings?.Announcement?.Trim() ?? string.Empty;
+
             string alertHtml = string.Empty;
             if (!string.IsNullOrEmpty(alertMessage))
             {
@@ -582,6 +590,18 @@ namespace Win11HotspotManager.Services
         .header {{ text-align: center; margin-bottom: 24px; }}
         .header .logo {{ font-size: 42px; margin-bottom: 8px; }}
         .header h1 {{ font-size: 22px; font-weight: 600; color: #ffffff; }}
+        .venue-sub {{ font-size: 12.5px; color: #64748b; margin-top: 4px; }}
+        .announce {{
+            background: rgba(59, 130, 246, 0.12);
+            border: 1px solid #3b82f6;
+            color: #bfdbfe;
+            padding: 10px 12px;
+            border-radius: 8px;
+            font-size: 13px;
+            margin-bottom: 20px;
+            line-height: 1.4;
+            text-align: center;
+        }}
         .desc {{ font-size: 13.5px; color: #94a3b8; text-align: center; margin-bottom: 24px; line-height: 1.5; }}
         .form-group {{ margin-bottom: 18px; }}
         .form-group label {{ display: block; font-size: 13px; font-weight: 500; color: #cbd5e1; margin-bottom: 6px; }}
@@ -653,8 +673,10 @@ namespace Win11HotspotManager.Services
     <div class='card'>
         <div class='header'>
             <div class='logo'>📶</div>
-            <h1>Wi-Fi Giriş Portalı</h1>
+            <h1>{(string.IsNullOrEmpty(businessName) ? "Wi-Fi Giriş Portalı" : WebUtility.HtmlEncode(businessName))}</h1>
+            {(string.IsNullOrEmpty(businessName) ? "" : "<div class='venue-sub'>Wi-Fi Giriş Portalı</div>")}
         </div>
+        {(string.IsNullOrEmpty(announcement) ? "" : $"<div class='announce'>📢 {WebUtility.HtmlEncode(announcement)}</div>")}
         {contentSection}
     </div>
 </body>

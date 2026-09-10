@@ -11,6 +11,10 @@
     <ApplicationManifest>app.manifest</ApplicationManifest>
   </PropertyGroup>
 
+  <ItemGroup>
+    <PackageReference Include="QRCoder" Version="1.6.0" />
+  </ItemGroup>
+
   <!-- WinDivert trafik sürücüsü: exe'nin yanına kopyalanır (ölçüm + hız/kota uygulaması için) -->
   <ItemGroup>
     <Content Include="Native\WinDivert.dll">

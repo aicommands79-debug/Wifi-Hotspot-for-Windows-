@@ -40,6 +40,13 @@ Windows 11 üzerinde bilgisayarınızın internetini paylaşmanızı ve kullanı
 
 > Hız/veri kotası için `WinDivert.dll` + `WinDivert64.sys` exe'nin yanında olmalı (projede `Native/` altında, derlemede otomatik kopyalanır) ve program yönetici olarak çalışmalıdır. Sürücü pasifse panelde "Sürücü: ⚠ Yok" görünür; süre kotası ve DNS logu sürücüsüz de çalışır.
 
+### 6. Yeni Özellikler
+- **📷 QR ile paylaşım**: Hotspot sekmesindeki butonla Wi-Fi katılım + giriş sayfası QR kodları açılır, misafir kamerayla okutup katılır.
+- **🚫 Site engelleme**: İzleme sekmesinden kara liste yönetilir; giriş yapmış cihazlar bile listedeki siteleri açamaz (DNS çözülmez, alt alan adları dahil).
+- **🎟 Toplu bilet + yazdırma**: 1-100 adet bilet tek tıkla üretilir, yazdırılabilir liste ve panoya kopyalama ile.
+- **🎨 Portal görünümü**: İşletme adı ve duyuru metni giriş sayfasına anında yansır.
+- **⏰ Zamanlayıcı**: Her gün belirlenen saat aralığında hotspot otomatik açılır/kapanır (elle durdurmada 15 dk zorlamaz).
+
 ---
 
 ## 🚀 Nasıl Çalıştırılır?

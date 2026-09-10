@@ -345,6 +345,78 @@
                                 </Border>
                             </Grid>
                         </Border>
+
+                        <!-- QR PAYLAŞIM KARTI -->
+                        <Border Style="{StaticResource ModernCard}">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                                    <TextBlock Text="📷 QR ile Paylaş" FontSize="14" FontWeight="SemiBold" Foreground="#FFFFFF"/>
+                                    <TextBlock Text="Misafir kamerayla okutup Wi-Fi'a katılır; giriş sayfası kodu da aynı ekrandadır." 
+                                               FontSize="11.5" Foreground="#94A3B8" Margin="0,2,0,0"/>
+                                </StackPanel>
+                                <Button Grid.Column="1" Content="📷 QR Kodu Göster" 
+                                        Background="#7C3AED" Foreground="#FFFFFF" BorderThickness="0"
+                                        Padding="14,8" FontSize="12.5" FontWeight="SemiBold" Cursor="Hand"
+                                        Click="BtnShowQr_Click">
+                                    <Button.Resources>
+                                        <Style TargetType="Border">
+                                            <Setter Property="CornerRadius" Value="8"/>
+                                        </Style>
+                                    </Button.Resources>
+                                </Button>
+                            </Grid>
+                        </Border>
+
+                        <!-- PORTAL GÖRÜNÜM KARTI -->
+                        <Border x:Name="CardPortalLook" Style="{StaticResource ModernCard}">
+                            <StackPanel>
+                                <TextBlock Text="🎨 Giriş Sayfası Görünümü" FontSize="14" FontWeight="SemiBold" Foreground="#FFFFFF" Margin="0,0,0,4"/>
+                                <TextBlock Text="İşletme adı ve duyuru, misafirin gördüğü giriş sayfasına anında yansır." 
+                                           FontSize="11.5" Foreground="#94A3B8" Margin="0,0,0,10" TextWrapping="Wrap"/>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="12"/>
+                                        <ColumnDefinition Width="1.4*"/>
+                                        <ColumnDefinition Width="12"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBox x:Name="TxtBusinessName" Grid.Column="0" Style="{StaticResource ModernTextBox}" Height="36" ToolTip="İşletme adı (boş bırakılırsa varsayılan başlık)"/>
+                                    <TextBox x:Name="TxtAnnouncement" Grid.Column="2" Style="{StaticResource ModernTextBox}" Height="36" ToolTip="Duyuru metni (boş bırakılırsa gizlenir)"/>
+                                    <Button Grid.Column="4" Content="💾 Kaydet" Height="36" Padding="16,0"
+                                            Style="{StaticResource ModernButton}" Click="BtnSavePortalLook_Click"/>
+                                </Grid>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- ZAMANLAYICI KARTI -->
+                        <Border Style="{StaticResource ModernCard}">
+                            <StackPanel>
+                                <Grid Margin="0,0,0,4">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="⏰ Zamanlayıcı (Otomatik Aç/Kapat)" FontSize="14" FontWeight="SemiBold" Foreground="#FFFFFF" VerticalAlignment="Center"/>
+                                    <TextBlock x:Name="TxtSchedStatus" Grid.Column="1" Text="" FontSize="11.5" Foreground="#94A3B8" VerticalAlignment="Center"/>
+                                </Grid>
+                                <TextBlock Text="Her gün bu saat aralığında hotspot otomatik açılır, aralık dışında otomatik kapanır. Elle durdurursan 15 dk boyunca tekrar açılmaz." 
+                                           FontSize="11.5" Foreground="#94A3B8" Margin="0,0,0,10" TextWrapping="Wrap"/>
+                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                    <CheckBox x:Name="ChkSchedEnabled" Content="Etkin" Foreground="#D4D4D8" FontSize="12.5" VerticalAlignment="Center" Margin="0,0,14,0"/>
+                                    <TextBlock Text="Açılış:" FontSize="12.5" Foreground="#D4D4D8" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                    <TextBox x:Name="TxtSchedStart" Style="{StaticResource ModernTextBox}" Text="08:00" Width="80" Height="34" Margin="0,0,14,0" ToolTip="SS:dd"/>
+                                    <TextBlock Text="Kapanış:" FontSize="12.5" Foreground="#D4D4D8" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                    <TextBox x:Name="TxtSchedStop" Style="{StaticResource ModernTextBox}" Text="23:00" Width="80" Height="34" Margin="0,0,14,0" ToolTip="SS:dd"/>
+                                    <Button Content="💾 Kaydet" Height="34" Padding="16,0"
+                                            Style="{StaticResource ModernButton}" Click="BtnSaveSched_Click"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
                     </StackPanel>
                 </ScrollViewer>
             </TabItem>
@@ -381,17 +453,29 @@
                                 <ColumnDefinition Width="Auto"/>
                             </Grid.ColumnDefinitions>
 
-                            <!-- Quick Random Generate Button -->
-                            <Button Grid.Column="0" Content="🎲 Rastgele Bilet / Kullanıcı Üret" 
-                                    Background="#059669" Foreground="#FFFFFF" BorderThickness="0"
-                                    Padding="14,9" FontSize="12.5" FontWeight="SemiBold" Cursor="Hand"
-                                    Click="BtnGenerateRandomUser_Click">
-                                <Button.Resources>
-                                    <Style TargetType="Border">
-                                        <Setter Property="CornerRadius" Value="8"/>
-                                    </Style>
-                                </Button.Resources>
-                            </Button>
+                            <!-- Quick Random Generate Buttons -->
+                            <StackPanel Grid.Column="0" Orientation="Horizontal">
+                                <Button Content="🎲 Rastgele Bilet" 
+                                        Background="#059669" Foreground="#FFFFFF" BorderThickness="0"
+                                        Padding="14,9" FontSize="12.5" FontWeight="SemiBold" Cursor="Hand" Margin="0,0,8,0"
+                                        Click="BtnGenerateRandomUser_Click">
+                                    <Button.Resources>
+                                        <Style TargetType="Border">
+                                            <Setter Property="CornerRadius" Value="8"/>
+                                        </Style>
+                                    </Button.Resources>
+                                </Button>
+                                <Button Content="🎟 Toplu" 
+                                        Background="#7C3AED" Foreground="#FFFFFF" BorderThickness="0"
+                                        Padding="14,9" FontSize="12.5" FontWeight="SemiBold" Cursor="Hand"
+                                        Click="BtnBulkTickets_Click" ToolTip="Toplu bilet üret ve yazdır">
+                                    <Button.Resources>
+                                        <Style TargetType="Border">
+                                            <Setter Property="CornerRadius" Value="8"/>
+                                        </Style>
+                                    </Button.Resources>
+                                </Button>
+                            </StackPanel>
 
                             <!-- Manuel Add: Username -->
                             <TextBox Grid.Column="2" x:Name="TxtNewUsername" Style="{StaticResource ModernTextBox}" 
@@ -672,6 +756,56 @@
                                         </Button>
                                     </StackPanel>
                                 </Grid>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Blocked Sites -->
+                        <Border Style="{StaticResource ModernCard}">
+                            <StackPanel>
+                                <Grid Margin="0,0,0,10">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                        <TextBlock Text="🚫 Engelli Siteler" FontSize="14" FontWeight="SemiBold" Foreground="#FFFFFF" VerticalAlignment="Center"/>
+                                        <Border Background="#334155" CornerRadius="10" Padding="8,2" Margin="10,0,0,0" VerticalAlignment="Center">
+                                            <TextBlock x:Name="TxtBlockCount" Text="0 site" FontSize="11" Foreground="#94A3B8"/>
+                                        </Border>
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                                        <TextBox x:Name="TxtBlockDomain" Style="{StaticResource ModernTextBox}" Width="200" Height="32" Margin="0,0,8,0" ToolTip="örn: ornek.com (alt alanlar da engellenir)"/>
+                                        <Button Content="➕ Engelle" Padding="12,5" FontSize="12"
+                                                Background="#991B1B" Foreground="#FEE2E2" BorderThickness="0" Cursor="Hand"
+                                                Click="BtnAddBlock_Click">
+                                            <Button.Resources>
+                                                <Style TargetType="Border">
+                                                    <Setter Property="CornerRadius" Value="6"/>
+                                                </Style>
+                                            </Button.Resources>
+                                        </Button>
+                                    </StackPanel>
+                                </Grid>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="10"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <ListBox x:Name="LstBlocked" Grid.Column="0" MaxHeight="120" Background="#1E1E22" Foreground="#F4F4F5"
+                                             BorderBrush="#3F3F46" BorderThickness="1" FontSize="12.5" ScrollViewer.VerticalScrollBarVisibility="Auto"/>
+                                    <Button Grid.Column="2" Content="🗑 Seçiliyi Kaldır" Padding="12,6" FontSize="12" VerticalAlignment="Top"
+                                            Background="#334155" Foreground="#F8FAFC" BorderThickness="0" Cursor="Hand"
+                                            Click="BtnRemoveBlock_Click">
+                                        <Button.Resources>
+                                            <Style TargetType="Border">
+                                                <Setter Property="CornerRadius" Value="6"/>
+                                            </Style>
+                                        </Button.Resources>
+                                    </Button>
+                                </Grid>
+                                <TextBlock Text="Giriş yapmış cihazlar bile bu siteleri açamaz (DNS çözülmez). Yetkisiz cihazlar zaten portala düşer." 
+                                           FontSize="11" Foreground="#71717A" Margin="2,8,0,0" TextWrapping="Wrap"/>
                             </StackPanel>
                         </Border>
 

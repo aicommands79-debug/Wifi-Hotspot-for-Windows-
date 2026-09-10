@@ -26,8 +26,10 @@ namespace Win11HotspotManager.Services
         public bool IsRunning => _isRunning;
         public string LastError { get; private set; } = string.Empty;
 
-        /// <summary>Her DNS sorgusunda tetiklenir: (clientIp, domain, qtype, iletildiMi)</summary>
-        public event Action<string, string, ushort, bool>? DnsQueried;
+        /// <summary>Her DNS sorgusunda tetiklenir: (clientIp, domain, qtype, iletildiMi, engellendiMi)</summary>
+        public event Action<string, string, ushort, bool, bool>? DnsQueried;
+
+        public Func<string, bool>? BlocklistChecker;
 
         public DnsGatingServer(UserManager userManager)
         {
@@ -108,7 +110,7 @@ namespace Win11HotspotManager.Services
                 {
                     try { await _udpListener.SendAsync(fwd, fwd.Length, clientEndPoint); } catch { }
                 }
-                try { DnsQueried?.Invoke(clientIp, domain, qtype, true); } catch { }
+                try { DnsQueried?.Invoke(clientIp, domain, qtype, true, false); } catch { }
                 return;
             }
 
@@ -116,12 +118,26 @@ namespace Win11HotspotManager.Services
 
             if (isAuthorized)
             {
+                // Site engelleme: girişli cihazda bile kara listedekiler çözülmez
+                bool blocked = false;
+                try { blocked = BlocklistChecker?.Invoke(domain) == true; } catch { }
+                if (blocked)
+                {
+                    byte[] nodata = CraftNodataResponse(queryBuffer);
+                    if (_udpListener != null)
+                    {
+                        try { await _udpListener.SendAsync(nodata, nodata.Length, clientEndPoint); } catch { }
+                    }
+                    try { DnsQueried?.Invoke(clientIp, domain, qtype, false, true); } catch { }
+                    return;
+                }
+
                 byte[]? response = await ForwardToUpstreamAsync(queryBuffer);
                 if (response != null && _udpListener != null)
                 {
                     try { await _udpListener.SendAsync(response, response.Length, clientEndPoint); } catch { }
                 }
-                try { DnsQueried?.Invoke(clientIp, domain, qtype, response != null); } catch { }
+                try { DnsQueried?.Invoke(clientIp, domain, qtype, response != null, false); } catch { }
                 return;
             }
 
@@ -148,7 +164,7 @@ namespace Win11HotspotManager.Services
             {
                 try { await _udpListener.SendAsync(answer, answer.Length, clientEndPoint); } catch { }
             }
-            try { DnsQueried?.Invoke(clientIp, domain, qtype, treatedAsAllowed); } catch { }
+            try { DnsQueried?.Invoke(clientIp, domain, qtype, treatedAsAllowed, false); } catch { }
         }
 
         private static ushort GetQueryType(byte[] query)

@@ -37,12 +37,15 @@ namespace Win11HotspotManager
         private bool _isExplicitExit = false;
         private bool _firstMinimizeNotice = true;
         private bool _isPasswordShown = false;
-        private readonly string _settingsPath;
-        private bool _isLoadingSettings = false;
 
         private readonly UsageTracker _usageTracker = new();
         private readonly DeviceLimitStore _deviceLimits = new();
+        private readonly PortalSettingsStore _portalSettings = new();
+        private readonly BlocklistStore _blocklist = new();
         private TrafficMeter? _trafficMeter;
+        private System.Windows.Threading.DispatcherTimer? _schedTimer;
+        private bool _schedulerOwned = false;
+        private DateTime? _manualStopAt = null;
         private readonly ObservableCollection<DnsLogEntry> _dnsLog = new();
         private ICollectionView? _dnsView;
         private System.Windows.Threading.DispatcherTimer? _statsTimer;
@@ -51,10 +54,6 @@ namespace Win11HotspotManager
         public MainWindow()
         {
             InitializeComponent();
-
-            string settingsDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Win11HotspotManager");
-            try { Directory.CreateDirectory(settingsDir); } catch { }
-            _settingsPath = Path.Combine(settingsDir, "settings.json");
 
             _userManager = new UserManager();
             _captivePortalServer = new CaptivePortalServer(_userManager);
@@ -68,6 +67,8 @@ namespace Win11HotspotManager
             _userManager.UsersChanged += OnUsersChanged;
             _captivePortalServer.LoginAttempted += OnLoginAttempted;
             _dnsGatingServer.DnsQueried += OnDnsQueried;
+            _dnsGatingServer.BlocklistChecker = domain => _blocklist.IsBlocked(domain);
+            _captivePortalServer.SettingsProvider = () => _portalSettings.Get();
             _trafficMeter = new TrafficMeter(_userManager, mac => _deviceLimits.Get(mac));
 
             Loaded += MainWindow_Loaded;
@@ -88,6 +89,23 @@ namespace Win11HotspotManager
             GridUsers.SelectionChanged += GridUsers_SelectionChanged;
             GridActivity.SelectionChanged += GridActivity_SelectionChanged;
             UpdateDriverStatus();
+
+            var ps = _portalSettings.Get();
+            TxtBusinessName.Text = ps.BusinessName;
+            TxtAnnouncement.Text = ps.Announcement;
+            RefreshBlocklist();
+
+            ChkSchedEnabled.IsChecked = AppSettings.SchedEnabled;
+            TxtSchedStart.Text = AppSettings.SchedStart;
+            TxtSchedStop.Text = AppSettings.SchedStop;
+            UpdateSchedStatus();
+
+            _schedTimer = new System.Windows.Threading.DispatcherTimer
+            {
+                Interval = TimeSpan.FromSeconds(60)
+            };
+            _schedTimer.Tick += SchedTimer_Tick;
+            _schedTimer.Start();
 
             _statsTimer = new System.Windows.Threading.DispatcherTimer
             {
@@ -223,7 +241,7 @@ namespace Win11HotspotManager
             if (_hotspotService.CurrentState == HotspotState.Running)
             {
                 BtnToggleHotspot.IsEnabled = false;
-                await StopAllServicesAsync();
+                await StopAllServicesAsync(manual: true);
                 BtnToggleHotspot.IsEnabled = true;
             }
             else
@@ -246,6 +264,7 @@ namespace Win11HotspotManager
                 BtnToggleHotspot.IsEnabled = false;
                 var res = await _hotspotService.StartHotspotAsync(ssid, password);
                 BtnToggleHotspot.IsEnabled = true;
+                _schedulerOwned = false;
 
                 if (res.Success)
                 {
@@ -263,8 +282,9 @@ namespace Win11HotspotManager
             }
         }
 
-        private async Task StopAllServicesAsync()
+        private async Task StopAllServicesAsync(bool manual = true)
         {
+            if (manual) _manualStopAt = DateTime.Now;
             try { _trafficMeter?.Stop(); } catch { }
             _captivePortalServer.Stop();
             _dnsGatingServer.Stop();
@@ -340,28 +360,18 @@ namespace Win11HotspotManager
             UpdateModeVisuals();
         }
 
+        private bool _isLoadingSettings = false;
+
         private void LoadAuthMode()
         {
             _isLoadingSettings = true;
             try
             {
-                if (File.Exists(_settingsPath))
-                {
-                    string json = File.ReadAllText(_settingsPath);
-                    using var doc = JsonDocument.Parse(json);
-                    if (doc.RootElement.TryGetProperty("AuthMode", out var modeProp))
-                    {
-                        string mode = modeProp.GetString() ?? "Portal";
-                        if (mode.Equals("Standard", StringComparison.OrdinalIgnoreCase))
-                        {
-                            RbStandardMode.IsChecked = true;
-                        }
-                        else
-                        {
-                            RbPortalMode.IsChecked = true;
-                        }
-                    }
-                }
+                AppSettings.Load();
+                if (AppSettings.AuthMode.Equals("Standard", StringComparison.OrdinalIgnoreCase))
+                    RbStandardMode.IsChecked = true;
+                else
+                    RbPortalMode.IsChecked = true;
             }
             catch (Exception ex)
             {
@@ -376,16 +386,8 @@ namespace Win11HotspotManager
         private void SaveAuthMode(bool isPortal)
         {
             if (_isLoadingSettings) return;
-            try
-            {
-                var settings = new { AuthMode = isPortal ? "Portal" : "Standard" };
-                string json = JsonSerializer.Serialize(settings, new JsonSerializerOptions { WriteIndented = true });
-                File.WriteAllText(_settingsPath, json);
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"Settings save error: {ex.Message}");
-            }
+            AppSettings.AuthMode = isPortal ? "Portal" : "Standard";
+            AppSettings.Save();
         }
 
         private void UpdateModeVisuals()
@@ -407,6 +409,7 @@ namespace Win11HotspotManager
                 BadgeStandardActive.Visibility = Visibility.Collapsed;
 
                 BoxPortalInfo.Visibility = Visibility.Visible;
+                CardPortalLook.Visibility = Visibility.Visible;
                 BoxStandardModeWarning.Visibility = Visibility.Collapsed;
                 BoxUserActions.Opacity = 1.0;
                 BoxUserActions.IsEnabled = true;
@@ -441,6 +444,7 @@ namespace Win11HotspotManager
                 BadgePortalActive.Visibility = Visibility.Collapsed;
 
                 BoxPortalInfo.Visibility = Visibility.Collapsed;
+                CardPortalLook.Visibility = Visibility.Collapsed;
                 BoxStandardModeWarning.Visibility = Visibility.Visible;
                 // Kullanıcı/bilet üretimi yalnızca portal modunda anlamlıdır:
                 // standart modda listeyi salt görüntülenir yap, ekleme butonlarını pasifleştir.
@@ -631,9 +635,169 @@ namespace Win11HotspotManager
 
         #endregion
 
+        #region New Features (QR, Bulk, Look, Blocklist, Scheduler)
+
+        private void BtnShowQr_Click(object sender, RoutedEventArgs e)
+        {
+            string ssid = TxtSsid.Text.Trim();
+            string password = _isPasswordShown ? TxtPasswordVisible.Text : PbPassword.Password;
+            if (string.IsNullOrWhiteSpace(ssid))
+            {
+                ShowAlert("Önce bir Wi-Fi ağ adı (SSID) girin.", isError: true);
+                return;
+            }
+            var wnd = new QrCodeWindow
+            {
+                Owner = this,
+                Ssid = ssid,
+                Password = password,
+                PortalUrl = "http://192.168.137.1:8080"
+            };
+            wnd.ShowDialog();
+        }
+
+        private void BtnBulkTickets_Click(object sender, RoutedEventArgs e)
+        {
+            if (RbStandardMode.IsChecked == true)
+            {
+                ShowAlert("Klasik Wi-Fi Şifresi modundasınız. Bilet üretimi yalnızca Web Giriş Portalı modunda kullanılır.", isError: true);
+                return;
+            }
+            var wnd = new BulkTicketsWindow(_userManager)
+            {
+                Owner = this,
+                PortalUrl = "http://192.168.137.1:8080"
+            };
+            wnd.ShowDialog();
+        }
+
+        private void BtnSavePortalLook_Click(object sender, RoutedEventArgs e)
+        {
+            _portalSettings.Update(TxtBusinessName.Text, TxtAnnouncement.Text);
+            ShowAlert("🎨 Giriş sayfası güncellendi. Telefonda sayfayı yenileyin.", isError: false);
+        }
+
+        private void RefreshBlocklist()
+        {
+            Dispatcher.Invoke(() =>
+            {
+                var list = _blocklist.GetAll();
+                LstBlocked.ItemsSource = null;
+                LstBlocked.ItemsSource = list;
+                TxtBlockCount.Text = $"{list.Count} site";
+            });
+        }
+
+        private void BtnAddBlock_Click(object sender, RoutedEventArgs e)
+        {
+            string domain = TxtBlockDomain.Text.Trim();
+            if (_blocklist.Add(domain))
+            {
+                TxtBlockDomain.Text = string.Empty;
+                RefreshBlocklist();
+                ShowAlert($"🚫 '{domain}' engellendi.", isError: false);
+            }
+            else
+            {
+                ShowAlert("Geçersiz alan adı (örn: ornek.com) veya zaten listede.", isError: true);
+            }
+        }
+
+        private void BtnRemoveBlock_Click(object sender, RoutedEventArgs e)
+        {
+            if (LstBlocked.SelectedItem is string domain && _blocklist.Remove(domain))
+            {
+                RefreshBlocklist();
+                ShowAlert($"✅ '{domain}' engeli kaldırıldı.", isError: false);
+            }
+        }
+
+        private void BtnSaveSched_Click(object sender, RoutedEventArgs e)
+        {
+            if (!TimeSpan.TryParse(TxtSchedStart.Text.Trim(), out _) || !TimeSpan.TryParse(TxtSchedStop.Text.Trim(), out _))
+            {
+                ShowAlert("Saatler SS:dd formatında olmalı (örn: 08:00).", isError: true);
+                return;
+            }
+            AppSettings.SchedEnabled = ChkSchedEnabled.IsChecked == true;
+            AppSettings.SchedStart = TxtSchedStart.Text.Trim();
+            AppSettings.SchedStop = TxtSchedStop.Text.Trim();
+            AppSettings.Save();
+            UpdateSchedStatus();
+            ShowAlert(AppSettings.SchedEnabled ? $"⏰ Zamanlayıcı açık: {AppSettings.SchedStart}–{AppSettings.SchedStop}." : "⏰ Zamanlayıcı kapatıldı.", isError: false);
+        }
+
+        private static bool IsInScheduleWindow(TimeSpan start, TimeSpan stop, TimeSpan now)
+        {
+            if (start == stop) return false;
+            if (start < stop) return now >= start && now < stop;
+            return now >= start || now < stop; // gece yarısını aşan aralık
+        }
+
+        private void UpdateSchedStatus()
+        {
+            try
+            {
+                if (!AppSettings.SchedEnabled)
+                {
+                    TxtSchedStatus.Text = "⏰ Zamanlayıcı kapalı";
+                    return;
+                }
+                TimeSpan.TryParse(AppSettings.SchedStart, out TimeSpan start);
+                TimeSpan.TryParse(AppSettings.SchedStop, out TimeSpan stop);
+                bool inside = IsInScheduleWindow(start, stop, DateTime.Now.TimeOfDay);
+                TxtSchedStatus.Text = $"⏰ {AppSettings.SchedStart}–{AppSettings.SchedStop} arası açık{(inside ? " (penceredesin)" : "")}";
+            }
+            catch { }
+        }
+
+        private async void SchedTimer_Tick(object? sender, EventArgs e)
+        {
+            try
+            {
+                UpdateSchedStatus();
+                if (!AppSettings.SchedEnabled) return;
+                if (!TimeSpan.TryParse(AppSettings.SchedStart, out TimeSpan start) ||
+                    !TimeSpan.TryParse(AppSettings.SchedStop, out TimeSpan stop))
+                    return;
+
+                bool inside = IsInScheduleWindow(start, stop, DateTime.Now.TimeOfDay);
+
+                if (inside && _hotspotService.CurrentState == HotspotState.Stopped)
+                {
+                    if (_manualStopAt.HasValue && (DateTime.Now - _manualStopAt.Value).TotalMinutes < 15)
+                        return; // kullanıcı yeni durdurmuş, zorlama
+
+                    string ssid = TxtSsid.Text.Trim();
+                    string password = _isPasswordShown ? TxtPasswordVisible.Text : PbPassword.Password;
+                    if (string.IsNullOrWhiteSpace(ssid) || string.IsNullOrEmpty(password) || password.Length < 8)
+                        return; // geçersiz ayar, sessiz geç
+
+                    var res = await _hotspotService.StartHotspotAsync(ssid, password);
+                    if (res.Success)
+                    {
+                        _trafficMeter?.Start();
+                        UpdateDriverStatus();
+                        if (RbPortalMode.IsChecked == true) StartPortalServices();
+                        _schedulerOwned = true;
+                        ShowAlert("⏰ Zamanlayıcı: hotspot otomatik başlatıldı.", isError: false);
+                    }
+                }
+                else if (!inside && _hotspotService.CurrentState == HotspotState.Running && _schedulerOwned)
+                {
+                    await StopAllServicesAsync(manual: false);
+                    _schedulerOwned = false;
+                    ShowAlert("⏰ Zamanlayıcı: mesai dışı, hotspot otomatik durduruldu.", isError: false);
+                }
+            }
+            catch { }
+        }
+
+        #endregion
+
         #region Monitoring (DNS Log, Speed, Quota)
 
-        private void OnDnsQueried(string clientIp, string domain, ushort qtype, bool allowed)
+        private void OnDnsQueried(string clientIp, string domain, ushort qtype, bool allowed, bool blocked)
         {
             Dispatcher.InvokeAsync(() =>
             {
@@ -645,7 +809,8 @@ namespace Win11HotspotManager
                     ClientIp = clientIp,
                     Username = uname ?? string.Empty,
                     Domain = string.IsNullOrEmpty(domain) ? $"(qtype {qtype})" : domain,
-                    Allowed = allowed
+                    Allowed = allowed,
+                    Blocked = blocked
                 });
                 while (_dnsLog.Count > 1000) _dnsLog.RemoveAt(0);
                 TxtDnsTotal.Text = $"{_usageTracker.TotalDnsQueries} sorgu";
